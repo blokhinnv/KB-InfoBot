@@ -4,17 +4,21 @@
 import io
 import nltk
 import numpy as np
-import cPickle as pkl
+import pickle as pkl
 import os.path
 import string
 
 from deep_dialog.tools import to_tokens
 
 class FeatureExtractor:
+    '''
+        Берет 1, 2, .., N-граммы из текстов imdb-S_corpus.txt и db.txt
+        и записывает в self.grams + записывает это в файл рядом с db.txt
+    '''
     def __init__(self, corpus_path, db_path, N=1):
         self.N = N
-        save_path = db_path.rsplit('/',1)[0] + '/fdict_%d.p'%N
-        if os.path.isfile(save_path):
+        save_path = db_path.rsplit('/', 1)[0] + '/fdict_%d.p'%N
+        if os.path.isfile(save_path) and 0:
             f = open(save_path, 'rb')
             self.grams = pkl.load(f)
             self.n = pkl.load(f)
@@ -22,17 +26,19 @@ class FeatureExtractor:
         else:
             self.grams = {}
             self.n = 0
-            if corpus_path is not None: self._build_vocab_from_corpus(corpus_path)
-            if db_path is not None: self._build_vocab_from_db(db_path)
+            if corpus_path is not None: 
+                self._build_vocab_from_corpus(corpus_path)
+            if db_path is not None: 
+                self._build_vocab_from_db(db_path)
             f = open(save_path, 'wb')
             pkl.dump(self.grams, f)
             pkl.dump(self.n, f)
             f.close()
-        print 'Vocab Size = %d' %self.n
+        print ('Vocab Size = %d' %self.n)
 
-    def _build_vocab_from_db(self, corpus):
+    def _build_vocab_from_db(self, db_path):
         try:
-            f = io.open(corpus, 'r')
+            f = io.open(db_path, 'r')
             for line in f:
                 elements = line.rstrip().split('\t')[1:]
                 for ele in elements:
@@ -46,7 +52,7 @@ class FeatureExtractor:
                                 self.n += 1
             f.close()
         except UnicodeDecodeError:
-            f = open(corpus, 'r')
+            f = open(db_path, 'r')
             for line in f:
                 elements = line.rstrip().split('\t')[1:]
                 for ele in elements:
@@ -88,6 +94,8 @@ class FeatureExtractor:
             f.close()
 
     def featurize(self, text):
+        '''Ищет 1, 2, .., N-граммы из text в self.gram, заполняет вектор длины размерности self.gram частотами 
+        найденных n-грамм'''
         vec = np.zeros((len(self.grams),)).astype('float32')
         tokens = to_tokens(text)
         for i in range(len(tokens)):
@@ -100,6 +108,6 @@ class FeatureExtractor:
 
 if __name__=='__main__':
     F = FeatureExtractor('../data/corpora/selected_medium_corpus.txt','../data/selected_medium/db.txt')
-    print '\n'.join(F.grams.keys())
-    print F.featurize('Please search for the movie with Matthew Saville as director')
-    print F.featurize('I would like to see the movie with drama as genre')
+    print('\n'.join(F.grams.keys()))
+    print(F.featurize('Please search for the movie with Matthew Saville as director'))
+    print(F.featurize('I would like to see the movie with drama as genre'))

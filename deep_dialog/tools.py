@@ -1,6 +1,3 @@
-'''
-'''
-
 from collections import Counter
 import math
 import numpy as np
@@ -8,22 +5,28 @@ import sys
 import string
 import nltk
 from nltk.corpus import stopwords
+from typing import List, Union, Dict
 
 EXC = set(string.punctuation)
 
-def to_tokens(text):
-    utt = ''.join(ch for ch in text if ch not in EXC)
+def to_tokens(text: str) -> List[str]:
+    '''
+        убирает пунктуацию и стопслова из test и возвращает список токенов
+    '''
+    utt = ''.join(ch for ch in str(text) if ch not in EXC)
     tokens = nltk.word_tokenize(utt.lower())
     return [w for w in tokens if w not in stopwords.words('english')]
 
-def entropy(items):
+def entropy(items: Union[Counter, Dict, List]) -> float:
     if type(items) is Counter or type(items) is dict:
         P = items
     elif type(items) is list:
         P = Counter(items)
+
     if not P:
         # empty distribution
         return -1
+
     H = 0.
     N = 0.
     for v in P.values():
@@ -35,11 +38,11 @@ def entropy(items):
         return -1
     H = (H/N) + math.log(N,2)
     if math.isnan(H):
-        print '\n'.join(['%s:%.7f' %(k,v) for k,v in items.iteritems()])
+        print ('\n'.join(['%s:%.7f' %(k,v) for k,v in items.items()]))
         sys.exit()
     return H
 
-def entropy_p(p):
+def entropy_p(p: List) -> float:
     return np.sum(-p*np.nan_to_num(np.log2(p)))
 
 def categorical_sample(probs):

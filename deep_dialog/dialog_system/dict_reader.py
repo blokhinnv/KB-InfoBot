@@ -1,4 +1,8 @@
 '''
+Читает файл из params['act_set'] (interact.py, ...)
+Файл: ./data/dia_acts.txt' 
+Действия: request, inform, thank, deny
+
 '''
 
 

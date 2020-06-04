@@ -2,7 +2,7 @@
 '''
 
 from deep_dialog import tools
-from feature_extractor import FeatureExtractor
+from .feature_extractor import FeatureExtractor
 
 class Agent:
     def __init__(self, movie_dict=None, act_set=None, slot_set=None, db=None, corpus=None, \

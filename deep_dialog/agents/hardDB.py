@@ -4,11 +4,13 @@
 import random
 import operator
 import numpy as np
+from typing import List, Tuple
 
 class HardDB:
     ''' get dist over DB based on current beliefs '''
     def _check_db_soft(self):
         # induce disttribution over DB based on current beliefs over slots
+        # копипаста из softDB.py!
         probs = {}
         p_s = np.zeros((self.state['database'].N, \
                 len(self.state['database'].slots))).astype('float32')
@@ -30,10 +32,16 @@ class HardDB:
         return np.argsort(probs)[::-1].tolist()
 
     ''' query DB based on current known slots '''
-    def _check_db(self):
+    def _check_db(self) -> Tuple[List, List]:
         # from query to db form current inform_slots
+        # собираем значения слотов для запроса; если слот не отслеживается, то None
+        # если отслеживается, то берем значение, соотвествующее максимальной вер-ти в 
+        # self.state['inform_slots']
+        # потом ищем по набранным слотам
+        
         db_query = []
         for s in self.state['database'].slots:
+            # self.state['slot_tracker'] - множество слотов (добавляются в belief_tracker.py)
             if s in self.state['slot_tracker'] and s in self.state['inform_slots']:
                 max_i = np.argmax(self.state['inform_slots'][s])
                 max_key = self.movie_dict.dict[s][max_i]

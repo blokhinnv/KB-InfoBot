@@ -88,26 +88,36 @@ class AgentSimpleRLAllActNoDB(RLAgent,SoftDB,BeliefTracker):
 
     def initialize_episode(self):
         self.episode_count += 1
-        if self.training and self.episode_count%self.batch_size==0:
+        if self.training and self.episode_count % self.batch_size==0:
             self.num_updates += 1
-            if self.num_updates>self.pol_start and self.num_updates%ANNEAL==0: self.anneal_lr()
-            if self.num_updates < self.pol_start: loss = self.update(regime='SL')
-            else: loss = self.update(regime='RL')
-            if self.num_updates%DISPF==0: self._print_progress(loss)
-            if self.num_updates%SAVEF==0: self.save_model(dialog_config.MODEL_PATH+self._name)
+            if self.num_updates > self.pol_start and self.num_updates%ANNEAL==0: 
+                self.anneal_lr()
+
+            if self.num_updates < self.pol_start: 
+                loss = self.update(regime='SL')
+            else: 
+                loss = self.update(regime='RL')
+
+            if self.num_updates%DISPF==0: 
+                self._print_progress(loss)
+            if self.num_updates%SAVEF==0: 
+                self.save_model(dialog_config.MODEL_PATH+self._name)
 
         self.state = {}
         self.state['database'] = pkl.loads(pkl.dumps(self.database,-1))
         self.state['prevact'] = 'begin@begin'
+        # self._init_beliefs() из belief_tracker: инициализирует beliefs частотностями значений слотов
         self.state['inform_slots'] = self._init_beliefs()
         self.state['turn'] = 0
         self.state['num_requests'] = {s:0 for s in self.state['database'].slots}
         self.state['slot_tracker'] = set()
         self.state['dont_care'] = set()
         self.state['init_entropy'] = {}
+
         for s in dialog_config.inform_slots:
-            s_p = self.state['inform_slots'][s]/self.state['inform_slots'][s].sum()
+            s_p = self.state['inform_slots'][s] / self.state['inform_slots'][s].sum()
             self.state['init_entropy'][s] = tools.entropy_p(s_p)
+
         self.state['inputs'] = []
         self.state['actions'] = []
         self.state['rewards'] = []
@@ -115,6 +125,8 @@ class AgentSimpleRLAllActNoDB(RLAgent,SoftDB,BeliefTracker):
 
     ''' get next action based on rules '''
     def next(self, user_action, verbose=False):
+        # self._update_state из belief_tracker
+        # меняет значения (сначала - частотности) в self.state['inform_slots']
         self._update_state(user_action['nl_sentence'], upd=self.upd, verbose=verbose)
         self.state['turn'] += 1
 
@@ -124,12 +136,14 @@ class AgentSimpleRLAllActNoDB(RLAgent,SoftDB,BeliefTracker):
             s_p = self.state['inform_slots'][s]/self.state['inform_slots'][s].sum()
             H_slots[s] = tools.entropy_p(s_p)
         p_vector = np.zeros((self.in_size,)).astype('float32')
+
         if self.inputtype=='entropy':
             for i,s in enumerate(dialog_config.inform_slots):
-                if s in H_slots: p_vector[i] = H_slots[s]
-                p_vector[i+len(dialog_config.inform_slots)] = 1. if s in self.state['dont_care'] \
-                        else 0.
-            if self.state['turn']>1:
+                if s in H_slots: 
+                    p_vector[i] = H_slots[s]
+                p_vector[i+len(dialog_config.inform_slots)] = 1. if s in self.state['dont_care'] else 0.
+
+            if self.state['turn'] > 1:
                 pr_act = self.state['prevact'].split('@')
                 act_id = dialog_config.inform_slots.index(pr_act[1])
                 p_vector[2*len(dialog_config.inform_slots)+act_id] = 1.
@@ -151,8 +165,10 @@ class AgentSimpleRLAllActNoDB(RLAgent,SoftDB,BeliefTracker):
             _, action = self._rule_act(pp, db_probs)
             act, _, p_out = self._prob_act(p_vector, db_probs, mode='sample')
         else:
-            if self.training: act, action, p_out = self._prob_act(p_vector, db_probs, mode='sample')
-            else: act, action, p_out = self._prob_act(p_vector, db_probs, mode='max')
+            if self.training: 
+                act, action, p_out = self._prob_act(p_vector, db_probs, mode='sample')
+            else: 
+                act, action, p_out = self._prob_act(p_vector, db_probs, mode='max')
 
         self.state['inputs'].append(p_vector[0,0,:])
         self.state['actions'].append(action)
@@ -170,7 +186,7 @@ class AgentSimpleRLAllActNoDB(RLAgent,SoftDB,BeliefTracker):
         act['target'] = []
 
         action, probs, p_out = self.act(p, self.state['pol_state'], mode=mode)
-        if action==self.out_size-1:
+        if action==self.out_size - 1:
             act['diaact'] = 'inform'
             act['target'] = self._inform(db_probs)
             self.state['prevact'] = 'inform@inform'
@@ -192,8 +208,9 @@ class AgentSimpleRLAllActNoDB(RLAgent,SoftDB,BeliefTracker):
         sorted_entropies = sorted(H_slots.items(), key=operator.itemgetter(1), reverse=True)
         req = False
         for (s,h) in sorted_entropies:
-            if H_slots[s]<self.frac*self.state['init_entropy'][s] or H_slots[s]<self.ts or \
-                    self.state['num_requests'][s] >= self.max_req:
+            if (H_slots[s] < self.frac*self.state['init_entropy'][s] or 
+                H_slots[s] < self.ts or
+                self.state['num_requests'][s] >= self.max_req):
                 continue
             act['diaact'] = 'request'
             act['request_slots'][s] = 'UNK'
@@ -212,17 +229,24 @@ class AgentSimpleRLAllActNoDB(RLAgent,SoftDB,BeliefTracker):
 
     def terminate_episode(self, user_action):
         assert self.state['turn'] <= self.max_turn, "More turn than MAX_TURN!!"
+
         total_reward = aggregate_rewards(self.state['rewards']+[user_action['reward']],self.discount)
         inp = np.zeros((self.max_turn,self.in_size)).astype('float32')
         actmask = np.zeros((self.max_turn,self.out_size)).astype('int32')
         turnmask = np.zeros((self.max_turn,)).astype('int32')
-        for t in xrange(0,self.state['turn']):
+
+        for t in range(0,self.state['turn']):
             actmask[t,self.state['actions'][t]] = 1
             inp[t,:] = self.state['inputs'][t]
             turnmask[t] = 1
+
         self.add_to_pool(inp, turnmask, actmask, total_reward)
         self.recent_rewards.append(total_reward)
         self.recent_turns.append(self.state['turn'])
-        if self.state['turn'] == self.max_turn: self.recent_successes.append(0)
-        elif user_action['reward']>0: self.recent_successes.append(1)
-        else: self.recent_successes.append(-1)
+
+        if self.state['turn'] == self.max_turn: 
+            self.recent_successes.append(0)
+        elif user_action['reward'] > 0: 
+            self.recent_successes.append(1)
+        else: 
+            self.recent_successes.append(-1)

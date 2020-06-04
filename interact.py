@@ -116,8 +116,8 @@ user_sim = CmdUser(movie_kb, act_set, slot_set, None, max_turn, err_prob, db_ful
         fdict_path = 'data/'+params['db']+'/fdict_2.p')
 
 # load all agents
-print WELCOME
-print "Loading agents... This may take a few minutes"
+print (WELCOME)
+print ("Loading agents... This may take a few minutes")
 agent_type = agent_map[params['agent']]
 for k,v in agent_params[agent_type].iteritems():
     params[k] = v

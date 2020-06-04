@@ -3,7 +3,7 @@
 
 
 import argparse, json, random, copy
-import cPickle as pickle
+import pickle as pickle
 import numpy as np
 
 
@@ -395,20 +395,20 @@ def read_data(params, actdict=None, slotdict=None, worddict=None, template_wordd
     else:
         template_word_dict = copy.deepcopy(template_worddict)
     
-    print 'Some Statistics Info:'
-    print 'Dialog Act Dict Size:', len(act_dict)
-    print 'Dialog Act Set', json.dumps(act_dict, indent=2)
-    print 'Dialog Act Set Stat', json.dumps(act_stat, indent=2)
-    print 'Slot Dict Size:', len(slot_dict)
-    print 'Slot Set', json.dumps(slot_dict, indent=2)
+    print ('Some Statistics Info:')
+    print ('Dialog Act Dict Size:', len(act_dict))
+    print ('Dialog Act Set', json.dumps(act_dict, indent=2))
+    print ('Dialog Act Set Stat', json.dumps(act_stat, indent=2))
+    print ('Slot Dict Size:', len(slot_dict))
+    print ('Slot Set', json.dumps(slot_dict, indent=2))
 
-    print 'Slot Value Size:', len(slot_val_dict)
-    print 'Real Word Dict Size:', len(word_dict)
-    print 'Template Word Dict Size:', len(template_word_dict)
+    print ('Slot Value Size:', len(slot_val_dict))
+    print ('Real Word Dict Size:', len(word_dict))
+    print ('Template Word Dict Size:', len(template_word_dict))
     for slot in slot_val_dict.keys():
         if 'UNK' not in slot_val_dict[slot].keys(): slot_val_dict[slot]['UNK'] = len(slot_val_dict[slot])
         #if 'FINISH' not in slot_val_dict[slot].keys(): slot_val_dict[slot]['FINISH'] = len(slot_val_dict[slot])
-        print slot, len(slot_val_dict[slot]), slot_stat[slot]
+        print (slot, len(slot_val_dict[slot]), slot_stat[slot])
     
     data = {'act_dict': act_dict, 'slot_dict': slot_dict, 'slot_val_dict':slot_val_dict, 'dialog_set':dialog_set, 'word_dict': word_dict, 'template_word_dict':template_word_dict}
     return data
@@ -466,15 +466,16 @@ def load_json(path):
     #kb = json.load(open(path, 'rb'))
     kb = pickle.load(open(path, 'rb'))
     
-    for k in kb: print k, kb[k]
+    for k in kb: 
+        print (k, kb[k])
     
-    print 'size', len(kb)
+    print ('size', len(kb))
     
 
 
 def main(params):
     dset = DataSet(params)
-    print dset.get_struct_info()
+    print (dset.get_struct_info())
     
 
 #lstm_tanh_relu_[1468149176.91]_2_0.597.p: 45.4/34.6/28.5/24.5
@@ -493,6 +494,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     params = vars(args)
-    print json.dumps(params, indent=2)
+    print (json.dumps(params, indent=2))
 
     main(params)

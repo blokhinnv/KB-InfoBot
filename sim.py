@@ -45,12 +45,13 @@ params['nlg_model_path'] = './data/pretrained/lstm_tanh_[1470015675.73]_115_120_
 config = importlib.import_module('settings.config_'+params['db'])
 agent_params = config.agent_params
 dataset_params = config.dataset_params
+
 for k,v in dataset_params[params['db']].iteritems():
     params[k] = v
 for k,v in agent_params[agent_map[params['agent_type']]].iteritems():
     params[k] = v
 
-print 'Dialog Parameters: '
+print ('Dialog Parameters: ')
 print json.dumps(params, indent=2)
 
 

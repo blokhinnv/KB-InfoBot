@@ -11,13 +11,13 @@ Evaluate: perl .\eval\multi-bleu.perl .\results\real.txt < .\results\pred.txt
 
 
 import argparse, json, copy
-import cPickle as pickle
+import pickle as pickle
 import numpy as np
 
-from fileio import DataSet
-from decoders.decoder import decoder
+from .fileio import DataSet
+from .decoders.decoder import decoder
 
-from decoders.lstm_decoder_tanh import lstm_decoder_tanh
+from .decoders.lstm_decoder_tanh import lstm_decoder_tanh
 
 """ post_process to fill the slot value in the generated template sentence """
 def post_process(pred_template, slot_val_dict, slot_dict):
@@ -74,12 +74,12 @@ def evaluate(word_dict, template_word_dict, slot_dict, dset, split, decoder, par
         #results.append({'real':real_template_sentence, 'pred':pred_template_sentence}) 
         results.append({'real':real_sentence, 'pred':sentence}) 
         
-        print 'test case', i, "/", len(dset.split[split])
-        print 'teamplate:', real_template_sentence
-        print 'pred_template:', pred_template_sentence
-        print 'real:', real_sentence
-        print 'pred_sentence:', sentence
-        print ''
+        print ('test case', i, "/", len(dset.split[split]))
+        print ('teamplate:', real_template_sentence)
+        print ('pred_template:', pred_template_sentence)
+        print ('real:', real_sentence)
+        print ('pred_sentence:', sentence)
+        print ('')
     
     return results
 
@@ -105,12 +105,12 @@ def evaluate_all(word_dict, template_word_dict, slot_dict, dset, decoder, params
         #results.append({'real':real_template_sentence, 'pred':pred_template_sentence}) 
         results.append({'real':real_sentence, 'pred':sentence}) 
         
-        print 'test case', i, "/", len(dset.diaact_sentence_pairs)
-        print 'teamplate:', real_template_sentence
-        print 'pred_template:', pred_template_sentence
-        print 'real:', real_sentence
-        print 'pred_sentence:', sentence
-        print ''
+        print ('test case', i, "/", len(dset.diaact_sentence_pairs))
+        print ('teamplate:', real_template_sentence)
+        print ('pred_template:', pred_template_sentence)
+        print ('real:', real_sentence)
+        print ('pred_sentence:', sentence)
+        print ('')
     
     return results
 
@@ -149,10 +149,10 @@ def read_diaact_from_file(path, word_dict, template_word_dict, act_dict, slot_di
         # replace the slot_val place holder with real value
         sentence = post_process(pred_sentence, dia_act['inform_slots'], slot_dict)
             
-        print 'Test case', lineindex
-        print 'Dia-Act:', l
-        print 'Pred_Template:', pred_sentence 
-        print 'NLG:', sentence
+        print ('Test case', lineindex)
+        print ('Dia-Act:', l)
+        print ('Pred_Template:', pred_sentence )
+        print ('NLG:', sentence)
               
 """ parse the string into dia-act """
 def parse_str_to_diaact(string, act_dict, slot_dict):
@@ -290,10 +290,10 @@ def read_diaact_from_cmd(word_dict, template_word_dict, act_dict, slot_dict, dec
             # replace the slot_val place holder with real value
             sentence = post_process(pred_sentence, dia_act['inform_slots'], slot_dict)
                     
-            print 'Dia-Act:', annot
-            print 'Dia-Act Parsing:', dia_act
-            print 'Pred_Template:', pred_sentence 
-            print 'NLG:', sentence
+            print ('Dia-Act:', annot)
+            print ('Dia-Act Parsing:', dia_act)
+            print ('Pred_Template:', pred_sentence )
+            print ('NLG:', sentence)
         else:
             break
 
@@ -412,6 +412,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     params = vars(args)
-    print json.dumps(params, indent=2)
+    print (json.dumps(params, indent=2))
 
     main(params)

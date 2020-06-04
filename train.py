@@ -50,6 +50,8 @@ params['nlg_model_path'] = './data/pretrained/lstm_tanh_[1470015675.73]_115_120_
 config = importlib.import_module('settings.config_'+params['db'])
 agent_params = config.agent_params
 dataset_params = config.dataset_params
+
+
 for k,v in dataset_params[params['db']].iteritems():
     params[k] = v
 for k,v in agent_params[agent_map[params['agent_type']]].iteritems():
@@ -92,6 +94,7 @@ db_inc = Database(db_inc_path, movie_kb, name='incomplete%.2f_'%params['unk']+pa
 
 nlg = S2SNLG(template_path, params['nlg_slots_path'], params['nlg_model_path'], 
         params['nlg_temp'])
+        
 user_sim = RuleSimulator(movie_kb, act_set, slot_set, None, max_turn, nlg, err_prob, db_full, \
         1.-dk_prob, sub_prob=params['sub_prob'], max_first_turn=params['max_first_turn'])
 
@@ -161,11 +164,15 @@ dialog_manager_eval = DialogManager(agent_eval, user_sim, db_full, db_inc, movie
 def eval_agent(ite, max_perf, best=False):
     num_iter = 2000
     nn = np.sqrt(num_iter)
-    if best: agent_eval.load_model(dialog_config.MODEL_PATH+'best_'+agent_eval._name)
-    else: agent_eval.load_model(dialog_config.MODEL_PATH+agent_eval._name)
+    if best: 
+        agent_eval.load_model(dialog_config.MODEL_PATH+'best_'+agent_eval._name)
+    else: 
+        agent_eval.load_model(dialog_config.MODEL_PATH+agent_eval._name)
+
     all_rewards = np.zeros((num_iter,))
     all_success = np.zeros((num_iter,))
     all_turns = np.zeros((num_iter,))
+
     for i in range(num_iter):
         current_reward = 0
         current_success = False
@@ -187,8 +194,8 @@ def eval_agent(ite, max_perf, best=False):
             curr_perf, np.std(all_rewards)/nn, \
             np.mean(all_success), np.std(all_success)/nn, \
             np.mean(all_turns), np.std(all_turns)/nn))
-    if curr_perf>max_perf and not best:
-        max_perf=curr_perf
+    if curr_perf > max_perf and not best:
+        max_perf = curr_perf
         agent_eval.save_model(dialog_config.MODEL_PATH+'best_'+agent_eval._name)
     return max_perf
 
